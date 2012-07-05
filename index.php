@@ -3,7 +3,7 @@
 $in = dirname(__FILE__) . '/face3.jpg';
 $out = dirname(__FILE__) . '/face32.jpg';
 
-$cmd = "convert $in -convolve 1,1,1,0,0,0,1,1,1 $out";
+$cmd = "convert $in -convolve 1,1,1,0,0,0,1,1,1 $out"; //test 2
 
 exec('/opt/local/bin/' . $cmd .' 2>&1', $out1, $ret);
   
