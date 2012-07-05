@@ -1,5 +1,16 @@
 <?php
 
+$in = dirname(__FILE__) . '/face3.jpg';
+$out = dirname(__FILE__) . '/face32.jpg';
+
+$cmd = "convert $in -convolve 1,1,1,0,0,0,1,1,1 $out";
+
+exec('/opt/local/bin/' . $cmd .' 2>&1', $out1, $ret);
+  
+  header('Content-Type: image/jpeg');
+  test($out); 
+  
+        
 function imtest($file) {
   $im = new Imagick($file);
   
@@ -51,6 +62,7 @@ function test($file) {
 	$im_info = getimagesize($file);
 	$im = imagecreatefromjpeg($file);
 	
+	/*
 	$width = $im_info[0];
 	$height = $im_info[1];
 	
@@ -65,15 +77,13 @@ function test($file) {
 			
 			imagesetpixel($im, $x, $y, $id);
 		}	
-	}
+	}*/
 
-	//imagejpeg($im);
-	//imagedestroy($im);	
+	imagejpeg($im);
+	imagedestroy($im);	
 }
 
-//header('Content-Type: image/jpeg');
 $time_start = microtime(true);
-test('castle.jpg');
 $time_end = microtime(true);
 
 echo $time_end - $time_start;
