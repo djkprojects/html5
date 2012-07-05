@@ -1,0 +1,622 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Canvas test</title>
+</head> 
+<body>
+ 
+	<!--
+	<video id="video" controls width="480"  height="270">
+	  <source src="mov_bbb.ogg" type="video/ogg" />
+	</video>
+	<canvas id="vcanvas" style="border: 1px solid;"></canvas> 
+	//-->
+	
+	<script type="text/javascript" src="pix/pixastic.core.js"></script>
+	<script type="text/javascript" src="pix/actions/brightness.js"></script>
+	<script type="text/javascript" src="pix/actions/sharpen.js"></script>
+	<script type="text/javascript" src="pix/actions/noise.js"></script>
+	<script type="text/javascript" src="pix/actions/unsharpmask.js"></script> 
+	<script type="text/javascript" src="pix/actions/hsl.js"></script> 
+	<script type="text/javascript" src="hsl.js"></script> 
+	<script type="text/javascript" src="hsv.js"></script> 
+	<script type="text/javascript" src="hsvmij.js"></script> 
+	<script type="text/javascript" src="pix/actions/posterize.js"></script> 	
+	<script type="text/javascript" src="conv.js"></script> 	
+					
+	<!--<table cellspacing="4">
+		<tr><th colspan="3">Original</th></tr>
+		<tr><td><img id="eye" src="face.jpg" width="400" /></td><td><img id="tfl" src="butter.jpg" width="400" /></td><td><img id="bridge" src="bridge.jpg" width="400" /></td></tr>
+		<tr><th colspan="3">X Pro</th></tr>
+		<tr><td><canvas id="xpro1"></canvas></td><td><canvas id="xpro2"></canvas></td><td><canvas id="xpro7"></canvas></td></tr>
+		<tr><th colspan="3">Nashville</th></tr>
+		<tr><td><canvas id="xpro3"></canvas></td><td><canvas id="xpro4"></canvas></td><td><canvas id="xpro8"></canvas></td></tr>
+		<tr><th colspan="3">Greyscale</th></tr>
+		<tr><td><canvas id="xpro5"></canvas></td><td><canvas id="xpro6"></canvas></td><td><canvas id="xpro9"></canvas></td></tr>
+	</table>//-->
+
+	<script>
+
+		function getCurve(x, y, degree) {
+
+			if (!degree || degree >= x.length) {
+				var degree = x.length - 1;
+			}
+
+			var mxA = [], mxB = [], diag = [];
+
+			for (var i = 0; i < x.length; i++) {
+
+				mxA[i] = [], mxB[i] = [];
+
+				for (var j = 0; j <= degree; j++) {
+					mxA[i][j] = Math.pow(x[i], j);
+				}
+			}
+
+			mxB = y;
+
+			var rows = mxA.length, cols = mxA[0].length;
+
+			for (j = 0; j < cols; j++) {
+
+				var norm = 0;
+
+				for (i = j;  i < rows; i++) {
+					norm = Math.sqrt(Math.pow(mxA[i][j], 2) + Math.pow(norm, 2));
+				}
+
+				if (norm != 0) {
+
+			           if (mxA[j][j] < 0) {
+			           		norm = -norm;
+			           }
+
+			           for (i = j; i < rows; i++) {
+			           		mxA[i][j] /= norm;
+			           }
+
+       		          mxA[j][j] += 1;
+
+			          for (var m = j+1; m < cols; m++) {
+				            var s = 0;
+
+				            for (i = j; i < rows; i++) {
+					            	s += mxA[i][j] * mxA[i][m];
+				             }
+
+				            s = -s/mxA[j][j];
+
+				            for (i = j; i < rows; i++) {
+					            	mxA[i][m] += s * mxA[i][j];
+				            }
+			          }
+				}
+
+				diag[j] = - norm;
+			}
+
+
+			var cols2 = 1;
+
+	        for (j = 0; j < cols; j++) {
+
+		            s = 0;
+
+		            for (i = j; i < rows; i++) {
+			            	s += mxA[i][j] * mxB[i];
+		            }
+
+		            s = -s/mxA[j][j];
+
+		            for (i = j; i < rows; i++) {
+		              mxB[i] += s * mxA[i][j];
+		            }
+	        }
+
+	        for (j = cols - 1; j >= 0; j--) {
+
+		          mxB[j] /= diag[j];
+
+		          for (i = 0; i < j; i++) {
+			              mxB[i] -= mxB[j] * mxA[i][j];
+		          }
+	        }
+
+	        mxB.splice(degree+1,mxB.length-degree);
+
+	        return mxB;
+		}
+
+		function getRGBOutput(color, curve) {
+	        var res = 0;
+	        for (var i = 0, j = curve.length; i < j; i++) {
+		        	res  += curve[i] * Math.pow(color, i);
+	        }
+	        return Math.round(res);
+	   }
+
+		function renderVideo(src, dst) {
+			var vid = document.getElementById(src);
+			var interval;
+
+			vid.addEventListener('play', function() {
+
+				interval = window.setInterval(
+					function() {
+						glamour(src, dst);
+					}
+				, 20);
+
+			}, false);
+
+			vid.addEventListener('pause', function() {
+					window.clearInterval(interval);
+			}, false);
+
+			vid.addEventListener('ended', function() {
+					window.clearInterval(interval);
+			}, false);
+		}
+
+		function xPro(src, dest) {
+			var img=document.getElementById(src)
+			var canvas = document.getElementById(dest);
+			canvas.width = img.width;
+			canvas.height = img.height;
+
+			var ctx = canvas.getContext('2d');
+			ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+			var imgData = ctx.getImageData(0,0, canvas.width, canvas.height);
+
+			var rCurve = getCurve([0, 54, 105, 148, 201, 255], [0, 31, 86, 144, 219, 255]);
+			var gCurve = getCurve([0, 87, 231, 255], [0, 61, 231, 255]);
+			var bCurve = getCurve([0, 76, 163, 255], [25, 82, 149, 181]);
+			var rgbCurve = getCurve([0, 62, 128, 204, 255], [0, 45, 127, 187, 255]);
+
+			for (i=0; i<imgData.width*imgData.height*4;i+=4) {
+
+				imgData.data[i] = getRGBOutput(imgData.data[i], rgbCurve);
+				imgData.data[i+1] = getRGBOutput(imgData.data[i+1], rgbCurve);
+				imgData.data[i+2] = getRGBOutput(imgData.data[i+2], rgbCurve);
+
+				imgData.data[i] = getRGBOutput(imgData.data[i], rCurve);
+				imgData.data[i+1] = getRGBOutput(imgData.data[i+1], gCurve);
+				imgData.data[i+2] = getRGBOutput(imgData.data[i+2], bCurve);
+			}
+
+			ctx.putImageData(imgData, 0, 0);
+		}
+
+
+		function nashville(src, dest) {
+			var img=document.getElementById(src)
+			var canvas = document.getElementById(dest);
+			canvas.width = img.width;
+			canvas.height = img.height;
+
+			var ctx = canvas.getContext('2d');
+			ctx.drawImage(img,0,0, canvas.width, canvas.height);
+
+			var imgData = ctx.getImageData(0,0,canvas.width, canvas.height);
+
+			var rgbCurve = getCurve([0, 70, 167, 255], [38, 75, 203, 255]);
+
+			for (i=0; i<imgData.width*imgData.height*4;i+=4) {
+
+				imgData.data[i+2] = scale(imgData.data[i+2], 0, 255, 127, 255);
+
+				imgData.data[i] = multiply(imgData.data[i], 246);
+				imgData.data[i+1] = multiply(imgData.data[i+1], 221);
+				imgData.data[i+2] = multiply(imgData.data[i+2], 173);
+
+				imgData.data[i] = getRGBOutput(imgData.data[i], rgbCurve);
+				imgData.data[i+1] = getRGBOutput(imgData.data[i+1], rgbCurve);
+				imgData.data[i+2] = getRGBOutput(imgData.data[i+2], rgbCurve);
+			}
+
+			ctx.putImageData(imgData, 0, 0);
+		}
+
+		function golden(src, dest) {
+
+			var img=document.getElementById(src)
+			var canvas = document.getElementById(dest);
+			canvas.width = img.width;
+			canvas.height = img.height;
+
+			var ctx = canvas.getContext('2d');
+			ctx.drawImage(img,0,0, canvas.width, canvas.height);
+
+			var imgData = ctx.getImageData(0,0,canvas.width, canvas.height);
+
+			var rgbCurve = getCurve([0, 69, 127, 185, 255], [0, 41, 126, 215, 255]);
+
+			for (i=0; i<imgData.width*imgData.height*4;i+=4) {
+
+				imgData.data[i] = multiply(imgData.data[i], 246);
+				imgData.data[i+1] = multiply(imgData.data[i+1], 221);
+				imgData.data[i+2] = multiply(imgData.data[i+2], 173);
+
+				imgData.data[i] = getRGBOutput(imgData.data[i], rgbCurve);
+				imgData.data[i+1] = getRGBOutput(imgData.data[i+1], rgbCurve);
+				imgData.data[i+2] = getRGBOutput(imgData.data[i+2], rgbCurve);
+			}
+
+			ctx.putImageData(imgData, 0, 0);
+		}
+
+		function golden2(src, dest) {
+
+			var img=document.getElementById(src)
+			var canvas = document.getElementById(dest);
+			canvas.width = img.width;
+			canvas.height = img.height;
+
+			var ctx = canvas.getContext('2d');
+			ctx.drawImage(img,0,0, canvas.width, canvas.height);
+
+			var imgData = ctx.getImageData(0,0,canvas.width, canvas.height);
+
+			var gCurve = getCurve([0, 68, 171, 255], [0, 38, 143, 255]);
+			var bCurve = getCurve([0, 54, 127, 255], [0, 20, 127, 255]);
+			var rgbCurve = getCurve([0, 43, 101, 183, 255], [0, 75, 149, 221, 255]);
+
+			for (i=0; i<imgData.width*imgData.height*4;i+=4) {
+
+				imgData.data[i] = multiply(imgData.data[i], 246);
+				imgData.data[i+1] = multiply(imgData.data[i+1], 209);
+				imgData.data[i+2] = multiply(imgData.data[i+2], 128);
+
+				/*imgData.data[i] = getRGBOutput(imgData.data[i], rgbCurve);
+				imgData.data[i+1] = getRGBOutput(imgData.data[i+1], rgbCurve);
+				imgData.data[i+2] = getRGBOutput(imgData.data[i+2], rgbCurve);
+
+				imgData.data[i+1] = getRGBOutput(imgData.data[i+1], gCurve);
+				imgData.data[i+2] = getRGBOutput(imgData.data[i+2], bCurve);*/
+			}
+
+			ctx.putImageData(imgData, 0, 0);
+		}
+
+		function greyscale(src, dest) {
+			var img=document.getElementById(src)
+			var canvas = document.getElementById(dest);
+			canvas.width = img.width;
+			canvas.height = img.height;
+
+			var ctx = canvas.getContext('2d');
+			ctx.drawImage(img,0,0, canvas.width, canvas.height);
+
+			var imgData = ctx.getImageData(0,0,canvas.width, canvas.height);
+
+			for (i=0; i<imgData.width*imgData.height*4;i+=4) {
+
+				var grey = getRGBTone(imgData.data[i], imgData.data[i+1], imgData.data[i+2]);
+				grey = grey[0] + grey[1] + grey[2];
+				imgData.data[i] =grey;
+				imgData.data[i+1] = grey;
+				imgData.data[i+2] = grey;
+			}
+
+			ctx.putImageData(imgData, 0, 0);
+		}
+
+		function glamour(src, dest) {
+			var img=document.getElementById(src)
+			var canvas = document.getElementById(dest);
+			canvas.width = img.width;
+			canvas.height = img.height;
+
+			var ctx = canvas.getContext('2d');
+			ctx.drawImage(img,0,0, canvas.width, canvas.height);
+
+			var imgData = ctx.getImageData(0,0,canvas.width, canvas.height);
+
+			for (i=0; i<imgData.width*imgData.height*4;i+=4) {
+
+				imgData.data[i] = contrast(imgData.data[i], 40);
+				imgData.data[i+1] = contrast(imgData.data[i+1], 40);
+			}
+
+			ctx.putImageData(imgData, 0, 0);
+		}
+
+		function applyConvolutionMatrix(idata, odata, settings) {
+							
+			var kernel = settings.kernel,
+				 scale = settings.scale,
+				 offset = settings.offset,
+				 i = j = 0, 
+				 h = parseInt(idata.height),
+				 w = parseInt(idata.width),
+				 size = kernel.length,
+				 ms = Math.floor(Math.sqrt(size)),
+				 ms2 = Math.floor(ms/2);
+			
+			for (i = 0; i < h; i++) {
+				
+				for (j = 0; j < w; j++) {
+
+					var r = g = b = cc = 0;
+
+					if (size == 9) {
+
+						var tl = tc = tr = cl = cc = cr = bl = bc = br = 0;
+									
+						cc = i * w + j;
+						cl = (j == 0)?cc:cc - 1;
+						cr = (j ==w - 1)?cc:cc + 1;
+	
+						tc = (i == 0)?cc:cc - w;
+						tl = (j == 0)?tc:tc - 1;
+						tr = (j == w - 1)?tc:tc + 1;
+	
+						bc = (i == h - 1)?cc:cc + w;
+						bl = (j == 0)?bc:bc - 1;
+						br = (j == w - 1)?bc:bc + 1;
+												
+						cc *= 4; cl *= 4; cr *= 4; tc *= 4; tl *= 4; tr *= 4; bc *= 4; bl *= 4; br *= 4;
+	
+						r = (idata.data[tl] * kernel[0]) + (idata.data[tc] * kernel[1]) + (idata.data[tr] * kernel[2]) +
+		   					(idata.data[cl] * kernel[3]) + (idata.data[cc]  * kernel[4]) + (idata.data[cr] * kernel[5]) +
+							(idata.data[bl] * kernel[6]) + (idata.data[bc] * kernel[7]) + (idata.data[br] * kernel[8]);
+	
+						g = (idata.data[tl + 1] * kernel[0]) + (idata.data[tc + 1] * kernel[1]) + (idata.data[tr + 1] * kernel[2]) +
+		   					(idata.data[cl + 1] * kernel[3]) + (idata.data[cc + 1]  * kernel[4]) + (idata.data[cr + 1] * kernel[5]) +
+		   					(idata.data[bl + 1] * kernel[6]) + (idata.data[bc + 1] * kernel[7]) + (idata.data[br + 1] * kernel[8]);
+	
+						b = (idata.data[tl + 2] * kernel[0]) + (idata.data[tc + 2] * kernel[1]) + (idata.data[tr + 2] * kernel[2]) +
+		   					(idata.data[cl + 2] * kernel[3]) + (idata.data[cc + 2]  * kernel[4]) + (idata.data[cr + 2] * kernel[5]) +
+		   					(idata.data[bl + 2] * kernel[6]) + (idata.data[bc + 2] * kernel[7]) + (idata.data[br + 2] * kernel[8]);					
+
+					}
+					else {
+					
+						var m = x = y = v = pos = 0;
+	
+						for (m = 0;  m < size; m++) {
+							
+							x = j - ms2 + (m % ms);
+							y = i - ms2 + Math.floor(m/ms);
+							
+							if (x < 0) x = 0;
+							else if (x > w - 1) x = w - 1;
+							
+							if (y < 0) y = 0;
+							else if (y > h -1) y = h - 1;
+							
+							pos = (y * w + x) * 4;
+							v = kernel[m];
+							
+							r += idata.data[pos] * v;
+							g += idata.data[pos + 1] * v;
+							b += idata.data[pos + 2] * v;
+						}
+						
+						cc = (i * w + j) * 4;
+	   				}
+	   				
+	   				odata.data[cc] = r / scale + offset;
+	   				odata.data[cc+1] = g /scale + offset;
+	   				odata.data[cc+2] = b /scale + offset;	   				
+				}
+			}
+			
+			return odata;
+		}
+		
+		function getRGBTone(r, g, b) {
+				return [0.3 * r, 0.59 * g, 0.11 * b];
+		}
+
+		function multiply(src, dst) {
+			return Math.round((src * dst) / 255);
+		}
+
+		function noise(r, g, b, lvl, mono) {
+			
+			if (lvl) {
+						
+				if (mono) {
+	
+					var s1 = s2 = s3 = Math.round(Math.random())==1?1:-1;
+				}
+				else {
+	
+					s1 = Math.round(Math.random())==1?1:-1;
+					s2 = Math.round(Math.random())==1?1:-1;
+					s3 = Math.round(Math.random())==1?1:-1;
+				}
+	
+				r += Math.random() * 255 * lvl / 100 * s1;
+				g += Math.random() * 255 * lvl / 100 * s2;
+				b += Math.random() * 255 * lvl / 100 * s3;
+			}
+						
+			return [r, g, b];			
+		}
+
+		function map(value, imin, imax, omin, omax) {
+			return ((omax - omin) * (((value - imin) / (imax - imin)) * 100)) / 100 + omin;
+		}
+
+		function contrast(value, lvl) {
+			
+			lvl = (lvl>100)?100:(lvl<-100)?-100:lvl;
+			
+			var imin = lvl * 127 / 100,
+				imax =  255 - lvl * 127 / 100,
+				omin = 0,
+				omax = 255;
+
+			if (lvl > 0) {
+				//return (25500 * (value - imin) / (imax - imin)) / 100; FASTER!!!!
+		    	return map(value, lvl * 127 / 100, 255 - lvl * 127 / 100, 0, 255);		    	
+		    }
+		    else {
+			  	return map(value, 0, 255, (Math.abs(lvl) * 127) / 100, 255 - (Math.abs(lvl) * 127) / 100);
+		    }
+		}
+		
+		function brightness(value, lvl) {
+			return value += lvl;
+		}
+		
+		function invert(r, g, b) {
+			return [255 - r, 255 - g, 255 - b];
+		}
+		
+		function desaturate(r, g, b) {
+			var max = r;
+			if (g > max) max = g;
+			if (b > max) max = b;
+			
+			var min = r;
+			if (g < min) min = g;
+			if (b < min) min = b;
+			
+			return (min + max) / 2;
+		}
+		
+		function test(src, dest, val) {
+
+			var img = document.getElementById(src);
+			var canvas = document.getElementById(dest);
+			canvas.width = img.width;
+			canvas.height = img.height;
+
+			var ctx = canvas.getContext('2d');
+			ctx.drawImage(img,0,0, img.width, img.height);
+
+			var strength = 1;
+
+			//  SHARPEN
+			/*var scale = 4;
+			var mulS =  - strength;
+			var mulC = scale - 4 * (mulS);
+
+			var kernel = [
+				   0, mulS, 0,
+			   mulS, mulC, mulS,
+			       0, mulS, 0
+		    ];*/
+		    			
+			// BLUR
+			/*var mulC = 8;
+			var mulS =  4;			
+			var scale = 8 * mulS + mulC;
+
+			var kernel = [
+				   mulS, mulS, mulS,
+			   mulS, mulC, mulS,
+			       mulS, mulS, mulS
+		    ];*/
+		    
+		    //scale = 140;
+		   // kernel = [5,5,5,5,5,5,6,7,6,5,5,7,8,7,5,5,6,7,6,5,5,5,5,5,5];
+		    // offset = 0;
+		    			
+			var imgData = ctx.getImageData(0,0, canvas.width, canvas.height);
+						
+			for (i = 0, j = imgData.width*imgData.height*4; i<j;i+=4) {	
+					
+					//var rgb = hsl(imgData.data[i], imgData.data[i + 1], imgData.data[i + 2], 30, 25, 0, 1);
+					//var des = desaturate(imgData.data[i], imgData.data[i + 1], imgData.data[i + 2]);
+					
+					/*var des = desaturate(imgData.data[i], imgData.data[i+1], imgData.data[i+2]);
+					imgData.data[i] =  des;					
+					imgData.data[i+1] =  des;
+					imgData.data[i+2] =  des;*/
+			}
+			
+		    // HIGH PASS
+		    /*scale = 4;
+		    kernel = [-3,0,-3,0,15,0,-3,0,-3];
+		    offset = 128;
+		    		    		    		    
+			var settings = {scale: scale, kernel: kernel, offset: offset};
+			imgData = applyConvolutionMatrix(imgData, ctx.getImageData(0,0, canvas.width, canvas.height), settings);*/
+												
+		    /*scale = 140;
+		    kernel = [5,5,5,5,5,5,6,7,6,5,5,7,8,7,5,5,6,7,6,5,5,5,5,5,5];
+		    offset = 0;*/
+
+		    /*scale = 5;
+		    kernel = [
+   		    	0,0,0,0,1,
+		    	0,0,0,1,0,
+		    	0,0,1,0,0,
+		    	0,1,0,0,0,
+		    	1,0,0,0,0
+		    ];
+		    offset = 0;*/
+			
+			ctx.putImageData(imgData, 0, 0);								
+		}
+		
+		
+		function speed() {
+			
+			var m = 0;
+			var x = 123;
+			
+			for (var i = 0; i < 10000000; i++) {
+			
+			}
+		}
+		window.onload = function(e){
+			
+			console.time('test');
+						
+			//renderVideo('video', 'vcanvas');
+
+			//speed();
+			test('eye', 'xpro1');
+			//glamour('eye', 'xpro1');
+			//ttt();
+			
+			/*xPro('tfl', 'xpro2');
+			xPro('bridge', 'xpro7');*/
+
+			/*golden2('eye', 'xpro3');
+			golden2('tfl', 'xpro4');
+			golden2('bridge', 'xpro8');
+
+			golden('eye', 'xpro5');
+			golden('tfl', 'xpro6');
+			golden('bridge', 'xpro9');*/
+
+			/*nashville('eye', 'xpro3');
+			nashville('tfl', 'xpro4');
+			nashville('bridge', 'xpro8');*/
+			/*greyscale('bridge', 'xpro9');
+			greyscale('eye', 'xpro5');
+			greyscale('tfl', 'xpro6');*/
+			
+			console.timeEnd('test');
+		}
+
+		function ttt() {
+			
+			var img = new Image();
+			img.src = "face3.jpg";
+			img.onload = function() {
+			Pixastic.process(img, "posterize", {levels: 10, resultCanvas: document.getElementById('xpro2')});
+			}
+		}
+					
+	</script>
+	
+		<a href="javascript: void(0);" onclick="ttt();">TEST1</a>
+		<a href="javascript: void(0);" onclick="test('eye', 'xpro2');">TEST2</a>
+		<br />
+		<img id="eye" src="face3.jpg" />
+		<canvas id="xpro1" width="300"></canvas>
+		<canvas id="xpro2" width="300"></canvas>
+		
+		<button onclick="console.profile('test');test('eye', 'xpro2', this.value);console.profileEnd('test');" />
+</body>
+</html>

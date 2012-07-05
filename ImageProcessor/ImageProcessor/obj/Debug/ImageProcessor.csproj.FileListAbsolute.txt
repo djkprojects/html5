@@ -1,0 +1,8 @@
+C:\Projects\DotNet\ImageProcessor\ImageProcessor\bin\Debug\ImageProcessor.exe
+C:\Projects\DotNet\ImageProcessor\ImageProcessor\bin\Debug\ImageProcessor.pdb
+C:\Projects\DotNet\ImageProcessor\ImageProcessor\obj\Debug\ResolveAssemblyReference.cache
+C:\Projects\DotNet\ImageProcessor\ImageProcessor\obj\Debug\ImageProcessor.MainForm.resources
+C:\Projects\DotNet\ImageProcessor\ImageProcessor\obj\Debug\ImageProcessor.Properties.Resources.resources
+C:\Projects\DotNet\ImageProcessor\ImageProcessor\obj\Debug\ImageProcessor.csproj.GenerateResource.Cache
+C:\Projects\DotNet\ImageProcessor\ImageProcessor\obj\Debug\ImageProcessor.exe
+C:\Projects\DotNet\ImageProcessor\ImageProcessor\obj\Debug\ImageProcessor.pdb

@@ -1,0 +1,52 @@
+html{background-image:url(background.gif);}
+
+body{font-size:12px;font-family:"HelveticaNeue-Light","Helvetica Neue",Helvetica,Arial,sans-serif;font-weight:200;line-height:1.5;color:white;}
+code{font-size:12px;font-family:"BitstreamVeraSansMono-Roman","Bitstream Vera Sans Mono","DejaVuSansMono","DejaVu Sans Mono","Monaco",monospace;background:white;color:#10326b;}
+#nav li.nav-title a,h2{font-family:"HelveticaNeue-UltraLight","Helvetica Neue",Helvetica,Arial,sans-serif;font-weight:100;}
+
+p,h1,h2,h3,h4,h5,h6,ul,ol,pre,table{margin-bottom:18px;}
+h1,h2,h3,h4,h5,h6{font-weight:300;text-shadow:#023264 0 1px;}
+h1{font-size:24px;}
+h2{font-size:20px;line-height:24px;}
+h3{font-size:16px;line-height:18px;}
+pre{background:white;padding:6px;line-height:14px;}
+a{text-shadow:none;}
+a:link,a:visited{color:#ccc;}
+a:focus,a:hover{color:#aaa;}
+blockquote{padding-left:18px;border-left:6px solid white;}
+.clear{clear:both;}
+::selection{background:rgba(200,200,200,0.5);}
+::-moz-selection{background:rgba(200,200,200,0.5);}
+
+#wrapper{position:relative;width:800px;margin:0 auto;padding-top:40px;}
+
+#nav{height:36px;padding:0 6px;background:white;}
+#nav li{float:right;line-height:36px;}
+#nav li a{display:block;padding:0 12px;text-decoration:none;text-shadow:#ccc 0 1px;color:#10326b;}
+#nav li a:hover{background:#e5eaef;}
+#nav li a.selected{color:white;text-shadow:#023264 0 1px}
+#nav li.nav-title{float:left}
+#nav li.nav-title a{font-size:24px;padding:0;width:194px;text-align:center}
+
+#nav li a.selected,#nav li a.selected:hover{background-image:url(background.gif);background-repeat:repeat-x;}
+
+#body{font-size:14px;border-bottom:6px solid white;min-height:400px;}
+#body ul,#body ol{margin-left:36px;}
+#body ul li{list-style-type:disc;}
+#body ol li{list-style-type:decimal;}
+
+div.post{margin:36px 0;}
+div.post-meta{float:left;width:182px;}
+div.post-body{margin-left:200px;}
+div.post-meta h2{margin-bottom:0;}
+.post-date,.post-tags{font-size:11px;}
+.post-foot{height:16px;line-height:16px;font-size:11px;}
+.post-foot a{display:block;float:left;padding:0px 14px 0px 0px;margin-right:6px;font-weight:bold;text-decoration:none;background-repeat:no-repeat;background-position:100% 0px;}
+.post-foot a:hover{background-position:100% -16px;}
+.post-foot .continue{background-image:url(continue.gif);}
+.post-foot .permalink{background-image:url(permalink.gif);}
+.post-foot .jump{background-image:url(jump.gif);}
+
+#foot{padding-top:6px;font-size:11px;}
+#foot p{text-align:right;margin-bottom:40px;}
+#foot a{font-weight:bold;}
