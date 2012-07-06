@@ -3,7 +3,9 @@
 $in = dirname(__FILE__) . '/face3.jpg';
 $out = dirname(__FILE__) . '/face32.jpg';
 
-$cmd = "convert $in -convolve 1,1,1,0,0,0,1,1,1 $out"; //test 2
+//$cmd= "convert $in -function Polynomial '0.291,-1.500,2.434,-0.276,0'  $out";
+$cmd= "convert $in -channel R -function Polynomial '-0.067,0.333,-0.714,1.112,0.135,0'  $out";
+//$cmd= "convert $in -negate -convolve 0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0 $out"; //test 2
 
 exec('/opt/local/bin/' . $cmd .' 2>&1', $out1, $ret);
   
