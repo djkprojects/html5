@@ -125,7 +125,7 @@
 	        }
 
 	        mxB.splice(degree+1,mxB.length-degree);
-
+	        
 	        return mxB;
 		}
 
@@ -175,16 +175,16 @@
 			var gCurve = getCurve([0, 87, 231, 255], [0, 61, 231, 255]);
 			var bCurve = getCurve([0, 76, 163, 255], [25, 82, 149, 181]);
 			var rgbCurve = getCurve([0, 62, 128, 204, 255], [0, 45, 127, 187, 255]);
-
+			
 			for (i=0; i<imgData.width*imgData.height*4;i+=4) {
 
-				imgData.data[i] = getRGBOutput(imgData.data[i], rgbCurve);
+				/*imgData.data[i] = getRGBOutput(imgData.data[i], rgbCurve);
 				imgData.data[i+1] = getRGBOutput(imgData.data[i+1], rgbCurve);
-				imgData.data[i+2] = getRGBOutput(imgData.data[i+2], rgbCurve);
+				imgData.data[i+2] = getRGBOutput(imgData.data[i+2], rgbCurve);*/
 
 				imgData.data[i] = getRGBOutput(imgData.data[i], rCurve);
-				imgData.data[i+1] = getRGBOutput(imgData.data[i+1], gCurve);
-				imgData.data[i+2] = getRGBOutput(imgData.data[i+2], bCurve);
+				//imgData.data[i+1] = getRGBOutput(imgData.data[i+1], gCurve);
+				//imgData.data[i+2] = getRGBOutput(imgData.data[i+2], bCurve);
 			}
 
 			ctx.putImageData(imgData, 0, 0);
@@ -574,12 +574,12 @@
 			//renderVideo('video', 'vcanvas');
 
 			//speed();
-			test('eye', 'xpro1');
+			//test('eye', 'xpro1');
 			//glamour('eye', 'xpro1');
 			//ttt();
 			
-			/*xPro('tfl', 'xpro2');
-			xPro('bridge', 'xpro7');*/
+			xPro('eye', 'xpro2');
+			/*xPro('bridge', 'xpro7');
 
 			/*golden2('eye', 'xpro3');
 			golden2('tfl', 'xpro4');
